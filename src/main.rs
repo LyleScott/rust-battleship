@@ -39,7 +39,7 @@ impl Board {
 
         //self.ships[0].x = 3;
 
-        for ship in &self.ships {
+        for ship in self.ships.iter_mut() {
             // true = up/down, false = left/right
             let orientation: bool = rand::thread_rng().gen();
 
