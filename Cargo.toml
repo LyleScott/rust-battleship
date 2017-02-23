@@ -1,0 +1,7 @@
+[package]
+name = "battleship"
+version = "0.1.0"
+authors = ["Lyle Scott, III <lyle@ls3.io>"]
+
+[dependencies]
+rand = "0.3"
