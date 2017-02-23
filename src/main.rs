@@ -40,17 +40,19 @@ impl Board {
         //self.ships[0].x = 3;
 
         for ship in self.ships.iter_mut() {
-            // true = up/down, false = left/right
-            let orientation: bool = rand::thread_rng().gen();
+            while true {
+                // true = up/down, false = left/right
+                let orientation: bool = rand::thread_rng().gen();
 
-            // Pick a starting point.
-            let x = rand::thread_rng().gen_range(0, 9);
-            let y = rand::thread_rng().gen_range(0, 10);
+                // Pick a starting point.
+                let x = rand::thread_rng().gen_range(0, 9);
+                let y = rand::thread_rng().gen_range(0, 10);
 
-            // Check if this overlaps with an existing ship.
-            
-            ship.x = x;
-            ship.y = y;
+                ship.x = x;
+                ship.y = y;
+                break;
+                // TODO: finish.
+            }
         }
     }
 
