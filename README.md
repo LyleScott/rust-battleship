@@ -25,8 +25,10 @@ Ships:
 - Submarine: 3 spaces
 - Patrol: 2 spaces
 
-## What is worked:
+## What Works
 
 Well, when you start the game, it auto places your Ships on the board. :D
 
 ![Board Screenshot](misc/early_ss.png)
+
+That's about it. Check back.
