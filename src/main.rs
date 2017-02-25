@@ -93,26 +93,30 @@ impl Board {
     }
 
     fn is_hit(&self, row: i8, col: i8) -> bool {
-        &self.self_spaces[row as usize][col as usize] == &'-'
+        // Check if the row/col is a hit by checking if the space is in it's default state.
+        self.self_spaces[row as usize][col as usize] == '-'
     }
 
     fn destroyed_enemy(&self) -> bool {
+        // Check to see if all number of hits == max number of hits possible.
         let mut hits = 0;
         for i in &self.enemy_spaces {
             for j in i {
-                if *j == 'x' {
+                if j == &'x' {
                     hits += 1;
                 }
             }
         }
 
-        println!("hits: {0}", hits);
-
         hits == 17
     }
 
+    fn is_human(&self) -> bool {
+        self.name == "Human"
+    }
+
     fn print_battle_board(&self) {
-        print!(">> {0}:\n   ", self.name);
+        print!("\n>> {0}:\n   ", self.name);
 
         // Print column labels (1-10).
         for j in 1..11 {
@@ -160,6 +164,12 @@ impl Board {
     }
 }
 
+impl PartialEq for Board {
+        fn eq(&self, other: &Board) -> bool {
+            self.name == other.name
+        }
+}
+
 fn ship_factory(name: String, len: i8) -> Ship {
     return Ship {
         name: name,
@@ -185,58 +195,81 @@ fn board_factory(name: String) -> Board {
 }
 
 fn main() {
-    let mut enemy_board = board_factory("Computer".to_string());
+    let mut computer_board = board_factory("Computer".to_string());
     let mut human_board = board_factory("Human".to_string());
 
-    println!();
-    enemy_board.initialize();
-
-    println!();
+    computer_board.initialize();
     human_board.initialize();
 
-    let mut is_humans_turn = true;
     let offset_a = 'A' as i8;
+
+    // Hold references to each board. Then swap them after each turn.
+    let active_board = &mut human_board;
+    let enemy_board = &mut computer_board;
+
     loop {
-        if is_humans_turn {
-            println!("\n\n\n\n\n\n\n");
-            enemy_board.print_battle_board();
-            human_board.print_battle_board();
-            human_board.print_enemy_board();
+        enemy_board.print_battle_board();
+        enemy_board.print_enemy_board();
+        active_board.print_battle_board();
+        active_board.print_enemy_board();
 
-            if human_board.destroyed_enemy() {
-                println!("You sank them all!");
-                break
-            }
-
-            loop {
-                let coordinate: String = read!("{}\n");
-                let offset = coordinate.len();
-
-                if offset < 1{
-                    println!("Bad input!");
-                    continue;
-                }
-
-                let row: i8 = coordinate.to_uppercase().chars().nth(0).unwrap() as i8 - offset_a;
-                let col: i8 = coordinate[1..offset].parse().unwrap_or(0) - 1;
-
-                if row < 0 || row >= 9 || col < 0 || col >= 10 {
-                    println!("Bad input!");
-                    continue;
-                }
-
-                human_board.enemy_spaces[row as usize][col as usize] = if enemy_board.is_hit(row, col) {
-                    '#' 
-                } else {
-                    'x'
-                };
-                break;
-            }
-
-        } else {
+        if active_board.destroyed_enemy() {
+            println!("{0} won!", active_board.name);
+            break
         }
 
-        is_humans_turn = !is_humans_turn
+        loop {
+            let mut row: i8;
+            let mut col: i8;
+
+            if active_board.is_human() {
+                // Get the coordinate from the user's keyboard.
+                let coordinate: String = read!("{}\n");
+
+                // The offset the length of the "number" part of the coordinate.
+                // ie, It can be "1" in the case of B1, but also "2" in the case of B10.
+                let offset = coordinate.len();
+                if offset < 1{
+                    // The user entered no characters or a single character.
+                    println!("Bad input!");
+                    continue
+                }
+
+                // Deduce the row index from the char value of the letter input.
+                row = coordinate.to_uppercase().chars().nth(0).unwrap() as i8 - offset_a;
+
+                // Grab the rest of the input string, which should be the number of the coordinate.
+                col = coordinate[1..offset].parse().unwrap_or(0) - 1;
+
+                // Bounds checking.
+                if row < 0 || row >= 9 || col < 0 || col >= 10 {
+                    // The coodinate the user chose is out of bounds.
+                    println!("Bad input!");
+                    continue
+                }
+            } else {
+                // Basically, guess a coordinate.
+                loop {
+                    row = rand::thread_rng().gen_range(b'A', b'I') as i8 - offset_a;
+                    col = rand::thread_rng().gen_range(0, 9) as i8;
+                    if active_board.enemy_spaces[row as usize][col as usize] == '-' {
+                        // Let the computer have the advantage of not duping a coordinate.
+                        break
+                    }
+                }
+            }
+
+            // Update what is displayed in that space.
+            active_board.enemy_spaces[row as usize][col as usize] = if enemy_board.is_hit(row, col) {
+                '🔹' 
+            } else {
+                '💥'
+            };
+            break
+        }
+
+        // Swap turns.
+        std::mem::swap(active_board, enemy_board);
     }
 }
 
