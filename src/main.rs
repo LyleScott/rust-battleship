@@ -8,6 +8,7 @@
 // Grids are marked horizontally by letters A through I and vertically by numbers 1 through 10.
 //
 extern crate rand;
+#[macro_use] extern crate text_io;
 
 use rand::Rng;
 
@@ -18,17 +19,10 @@ struct Ship {
     y: i8
 }
 
-impl Ship {
-    fn move_to(&mut self, x: i8, y: i8) {
-        self.x = x;
-        self.y = y;
-    }
-}
-
 struct Board {
     name: String,
     spaces: [[char; 10]; 9],
-    ships: [Ship; 5]
+    ships: [Ship; 5],
 }
 
 impl Board {
@@ -40,11 +34,11 @@ impl Board {
 
         for ship in self.ships.iter_mut() {
             loop {
-                // Pick a starting point.
+                // Pick a (random) starting point.
                 let w = rand::thread_rng().gen_range(0, max_width - 1);
                 let h = rand::thread_rng().gen_range(0, max_height - 1);
 
-                // Check if that space is taken.
+                // Start over if that space is already taken.
                 if self.spaces[h as usize][w as usize] != '-' {
                     continue
                 }
@@ -52,58 +46,73 @@ impl Board {
                 // true = up/down, false = left/right
                 let orientation: bool = rand::thread_rng().gen();
 
+                let bound: i8;
+                let start_point: i8;
+
                 if orientation {
-                    // Make sure the points are in bounds.
-                    if h + ship.len >= max_height {
-                        continue
-                    }
-                    skip = false;
-                    for i in h..ship.len + h {
-                        if self.spaces[i as usize][w as usize] != '-' {
-                            skip = true;
-                            continue
-                        }
-                    }
-                    if skip {
-                        continue
-                    }
-                    for i in h..ship.len + h {
-                        self.spaces[i as usize][w as usize] = ship.name.chars().nth(0).unwrap();
-                    }
-                    break;
+                    bound = max_height;
+                    start_point = h;
                 } else {
-                    // Make sure the points are in bounds.
-                    if w + ship.len >= max_width {
-                        continue
-                    }
-                    skip = false;
-                    for i in w..ship.len + w {
-                        if self.spaces[h as usize][i as usize] != '-' {
-                            skip = true;
-                            continue
-                        }
-                    }
-                    if skip {
-                        continue
-                    }
-                    for i in w..ship.len + w {
-                        self.spaces[h as usize][i as usize] = ship.name.chars().nth(0).unwrap();
-                    }
-                    break;
+                    bound = max_width;
+                    start_point = w;
                 }
+
+                // Make sure the end of the Ship is within the bounds of the board.
+                if start_point + ship.len >= bound {
+                    continue
+                }
+
+                skip = false;
+                //let mut value: char;
+
+                // Make sure any space that the Ship takes up is not taken.
+                for i in start_point..ship.len + start_point + 1 {
+                    let value = if orientation {
+                        self.spaces[i as usize][start_point as usize]
+                    } else {
+                        self.spaces[start_point as usize][i as usize]
+                    };
+
+                    // Space is taken, to bail out of this check.
+                    if value != '-' {
+                        skip = true;
+                        break
+                    }
+                }
+                if skip {
+                    // Space is taken, so restart placing the Ship.
+                    continue
+                }
+
+                // Update the board spaces with the Ship's label (1st character of name).
+                let label = ship.name.chars().nth(0).unwrap();
+                for i in start_point..ship.len + start_point + 1 {
+                    if orientation {
+                        self.spaces[i as usize][start_point as usize] = label;
+                    } else {
+                        self.spaces[start_point as usize][i as usize] = label;
+                    }
+                }
+
+                // Move on to placing the next Ship.
+                break
             }
         }
     }
 
-    fn print_board(&self) {
+    fn print_battle_board(&self) {
         print!(">> {0}:\n   ", self.name);
 
+        // Print column labels (1-10).
         for j in 1..11 {
             print!(" {0} ", j);
         }
         println!();
 
+        // A
         let mut i = 65u8;
+
+        // Prefix each row with the label (A-I) and print the row contents.
         for row in &self.spaces {
             print!(" {0} ", i as char);
             i += 1;
@@ -139,10 +148,23 @@ fn board_factory(name: String) -> Board {
 }
 
 fn main() {
-    //let mut computer_board = board_factory("Computer".to_string());
+    let mut computer_board = board_factory("Computer".to_string());
     let mut human_board = board_factory("Human".to_string());
 
+    println!();
+    computer_board.initialize();
+    computer_board.print_battle_board();
+
+    println!();
     human_board.initialize();
-    human_board.print_board();
+    human_board.print_battle_board();
+    
+
+    /*
+    whos_turn = true;
+    loop {
+        let turn: String = read!("{}\n");
+    }
+    */
 }
 
