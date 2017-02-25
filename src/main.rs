@@ -2,7 +2,7 @@ extern crate rand;
 #[macro_use] extern crate text_io;
 
 use rand::Rng;
-use std::thread::sleep_ms;
+use std::thread::sleep;
 
 struct Ship {
     name: String,
@@ -96,7 +96,7 @@ impl Board {
 
     fn is_hit(&self, row: i8, col: i8) -> bool {
         // Check if the row/col is a hit by checking if the space is in it's default state.
-        self.self_spaces[row as usize][col as usize] == '-'
+        self.self_spaces[row as usize][col as usize] != '-'
     }
 
     fn destroyed_enemy(&self) -> bool {
@@ -117,34 +117,17 @@ impl Board {
         self.name == "Human"
     }
 
-    fn print_battle_board(&self) {
+    fn print_board(&self, is_self: bool) {
         // A
         let mut i = 65u8;
+        let spaces_ref = if is_self {
+            self.self_spaces
+        } else {
+            self.enemy_spaces
+        };
 
         // Prefix each row with the label (A-I) and print the row contents.
-        for row in &self.self_spaces {
-            print!(" {0} ", i as char);
-            i += 1;
-            for j in row {
-                print!(" {0} ", j);
-            }
-            println!();
-        }
-
-        // Print column labels (1-10).
-        print!("   ");
-        for j in 1..11 {
-            print!(" {0} ", j);
-        }
-        println!();
-    }
-
-    fn print_enemy_board(&self) {
-        // A
-        let mut i = 65u8;
-
-        // Prefix each row with the label (A-I) and print the row contents.
-        for row in &self.enemy_spaces {
+        for row in &spaces_ref {
             print!(" {0} ", i as char);
             i += 1;
             for j in row {
@@ -216,10 +199,10 @@ fn main() {
 
             if active_board.is_human() {
                 // Print the boards.
-                println!("\n>> My Status");
-                active_board.print_battle_board();
-                println!("\n>> Enemy Status");
-                active_board.print_enemy_board();
+                println!("\n>> Our Fleet Status");
+                active_board.print_board(true);
+                println!("\n>> Enemy Fleet Status");
+                active_board.print_board(false);
 
                 // Get the coordinate from the user's keyboard.
                 println!("\n?> Coordinate, sir? (ie, C5)");
@@ -248,11 +231,11 @@ fn main() {
                 }
 
                 if enemy_board.is_hit(row, col) {
-                    println!(":> HIT!");
+                    println!(":> We HIT them, Captain!");
                 } else {
-                    println!(":> MISS!");
+                    println!(":> We MISSED them, Captain!");
                 }
-                sleep_ms(1200);
+                //sleep(1100);
             } else {
                 // Basically, guess a coordinate.
                 loop {
@@ -263,19 +246,25 @@ fn main() {
                         break
                     }
                 }
+
+                if enemy_board.is_hit(row, col) {
+                    println!(":> They HIT us, Captain!");
+                } else {
+                    println!(":> They MISSED us, Captain!");
+                }
             }
 
             // Update what is displayed in that space.
             active_board.enemy_spaces[row as usize][col as usize] = if enemy_board.is_hit(row, col) {
-                MISS_ICON
-            } else {
                 HIT_ICON
+            } else {
+                MISS_ICON
             };
 
             enemy_board.self_spaces[row as usize][col as usize] = if enemy_board.is_hit(row, col) {
-                MISS_ICON
-            } else {
                 HIT_ICON
+            } else {
+                MISS_ICON
             };
 
             break
