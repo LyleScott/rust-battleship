@@ -2,15 +2,15 @@ extern crate rand;
 #[macro_use] extern crate text_io;
 
 use rand::Rng;
-
-let CHEAT_MODE = false;
+use std::thread::sleep_ms;
 
 struct Ship {
     name: String,
     len: i8,
-    x: i8,
-    y: i8
 }
+
+const MISS_ICON: char = '🔹';
+const HIT_ICON: char = '💥';
 
 struct Board {
     name: String,
@@ -118,14 +118,6 @@ impl Board {
     }
 
     fn print_battle_board(&self) {
-        print!("\n>> {0}:\n   ", self.name);
-
-        // Print column labels (1-10).
-        for j in 1..11 {
-            print!(" {0} ", j);
-        }
-        println!();
-
         // A
         let mut i = 65u8;
 
@@ -138,11 +130,16 @@ impl Board {
             }
             println!();
         }
+
+        // Print column labels (1-10).
+        print!("   ");
+        for j in 1..11 {
+            print!(" {0} ", j);
+        }
+        println!();
     }
 
     fn print_enemy_board(&self) {
-        println!();
-
         // A
         let mut i = 65u8;
 
@@ -156,9 +153,8 @@ impl Board {
             println!();
         }
 
-        print!("   ");
-
         // Print column labels (1-10).
+        print!("   ");
         for j in 1..11 {
             print!(" {0} ", j);
         }
@@ -176,8 +172,6 @@ fn ship_factory(name: String, len: i8) -> Ship {
     return Ship {
         name: name,
         len: len,
-        x: -1, 
-        y: -1,
     }
 }
 
@@ -210,10 +204,6 @@ fn main() {
     let enemy_board = &mut computer_board;
 
     loop {
-        enemy_board.print_battle_board();
-        enemy_board.print_enemy_board();
-        active_board.print_battle_board();
-        active_board.print_enemy_board();
 
         if active_board.destroyed_enemy() {
             println!("{0} won!", active_board.name);
@@ -225,13 +215,20 @@ fn main() {
             let mut col: i8;
 
             if active_board.is_human() {
+                // Print the boards.
+                println!("\n>> My Status");
+                active_board.print_battle_board();
+                println!("\n>> Enemy Status");
+                active_board.print_enemy_board();
+
                 // Get the coordinate from the user's keyboard.
+                println!("\n?> Coordinate, sir? (ie, C5)");
                 let coordinate: String = read!("{}\n");
 
                 // The offset the length of the "number" part of the coordinate.
                 // ie, It can be "1" in the case of B1, but also "2" in the case of B10.
                 let offset = coordinate.len();
-                if offset < 1{
+                if offset < 1 {
                     // The user entered no characters or a single character.
                     println!("Bad input!");
                     continue
@@ -249,6 +246,13 @@ fn main() {
                     println!("Bad input!");
                     continue
                 }
+
+                if enemy_board.is_hit(row, col) {
+                    println!(":> HIT!");
+                } else {
+                    println!(":> MISS!");
+                }
+                sleep_ms(1200);
             } else {
                 // Basically, guess a coordinate.
                 loop {
@@ -263,10 +267,17 @@ fn main() {
 
             // Update what is displayed in that space.
             active_board.enemy_spaces[row as usize][col as usize] = if enemy_board.is_hit(row, col) {
-                '🔹' 
+                MISS_ICON
             } else {
-                '💥'
+                HIT_ICON
             };
+
+            enemy_board.self_spaces[row as usize][col as usize] = if enemy_board.is_hit(row, col) {
+                MISS_ICON
+            } else {
+                HIT_ICON
+            };
+
             break
         }
 
