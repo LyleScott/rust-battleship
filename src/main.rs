@@ -3,6 +3,8 @@ extern crate rand;
 
 use rand::Rng;
 
+let CHEAT_MODE = false;
+
 struct Ship {
     name: String,
     len: i8,
