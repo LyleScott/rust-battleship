@@ -6,6 +6,7 @@ use std::{thread, time};
 
 const MISS_ICON: char = '🔹';
 const HIT_ICON: char = '💥';
+const DEFAULT_ICON: char = '-';
 const MAX_BOARD_WIDTH: usize = 10;
 const MAX_BOARD_HEIGHT: usize = 9;
 static WE_HIT_MESSAGE: &'static str = ":> We HIT them, Captain!";
@@ -30,7 +31,6 @@ impl Board {
         // Constraints.
         let mut skip: bool;
         let mut orientation: bool;
-        let mut bound: usize;
         let mut bound: i8;
         let mut start_point: i8;
 
@@ -41,7 +41,7 @@ impl Board {
                 let h = rand::thread_rng().gen_range(0, MAX_BOARD_HEIGHT - 1);
 
                 // Start over if that space is already taken.
-                if self.self_spaces[h as usize][w as usize] != '-' {
+                if self.self_spaces[h as usize][w as usize] != DEFAULT_ICON {
                     continue
                 }
 
@@ -74,7 +74,7 @@ impl Board {
                     };
 
                     // Space is taken, to bail out of this check.
-                    if value != '-' {
+                    if value != DEFAULT_ICON {
                         skip = true;
                         break
                     }
@@ -102,7 +102,7 @@ impl Board {
 
     fn is_hit(&self, row: i8, col: i8) -> bool {
         // Check if the row/col is a hit by checking if the space is in it's default state.
-        self.self_spaces[row as usize][col as usize] != '-'
+        self.self_spaces[row as usize][col as usize] != DEFAULT_ICON
     }
 
     fn has_destroyed_enemy(&self) -> bool {
@@ -152,9 +152,9 @@ impl Board {
 }
 
 impl PartialEq for Board {
-        fn eq(&self, other: &Board) -> bool {
-            self.name == other.name
-        }
+    fn eq(&self, other: &Board) -> bool {
+        self.name == other.name
+    }
 }
 
 fn ship_factory(name: String, len: i8) -> Ship {
@@ -167,8 +167,8 @@ fn ship_factory(name: String, len: i8) -> Ship {
 fn board_factory(name: String) -> Board {
     return Board {
         name: name.to_string(),
-        self_spaces: [['-'; MAX_BOARD_WIDTH]; MAX_BOARD_HEIGHT],
-        enemy_spaces: [['-'; MAX_BOARD_WIDTH]; MAX_BOARD_HEIGHT],
+        self_spaces: [[DEFAULT_ICON; MAX_BOARD_WIDTH]; MAX_BOARD_HEIGHT],
+        enemy_spaces: [[DEFAULT_ICON; MAX_BOARD_WIDTH]; MAX_BOARD_HEIGHT],
         ships: [
             ship_factory("aircraft".to_string(), 5),
             ship_factory("battleship".to_string(), 4),
@@ -242,7 +242,7 @@ fn main() {
                 loop {
                     row = rand::thread_rng().gen_range(b'A', b'I') as i8 - offset_a;
                     col = rand::thread_rng().gen_range(0, 9) as i8;
-                    if active_board.enemy_spaces[row as usize][col as usize] == '-' {
+                    if active_board.enemy_spaces[row as usize][col as usize] == DEFAULT_ICON {
                         // Let the computer have the advantage of not duping a coordinate.
                         break
                     }
