@@ -6,6 +6,8 @@ use std::{thread, time};
 
 const MISS_ICON: char = '🔹';
 const HIT_ICON: char = '💥';
+const MAX_BOARD_WIDTH: usize = 10;
+const MAX_BOARD_HEIGHT: usize = 9;
 static WE_HIT_MESSAGE: &'static str = ":> We HIT them, Captain!";
 static WE_MISS_MESSAGE: &'static str = ":> We MISSED them, Captain!";
 static THEY_HIT_MESSAGE: &'static str = ":> They HIT us, Captain!";
@@ -18,23 +20,25 @@ struct Ship {
 
 struct Board {
     name: String,
-    self_spaces: [[char; 10]; 9],
-    enemy_spaces: [[char; 10]; 9],
+    self_spaces: [[char; MAX_BOARD_WIDTH]; MAX_BOARD_HEIGHT],
+    enemy_spaces: [[char; MAX_BOARD_WIDTH]; MAX_BOARD_HEIGHT],
     ships: [Ship; 5],
 }
 
 impl Board {
     fn initialize(&mut self) {
         // Constraints.
-        let max_width = 10;
-        let max_height = 9;
         let mut skip: bool;
+        let mut orientation: bool;
+        let mut bound: usize;
+        let mut bound: i8;
+        let mut start_point: i8;
 
         for ship in self.ships.iter_mut() {
             loop {
                 // Pick a (random) starting point.
-                let w = rand::thread_rng().gen_range(0, max_width - 1);
-                let h = rand::thread_rng().gen_range(0, max_height - 1);
+                let w = rand::thread_rng().gen_range(0, MAX_BOARD_WIDTH - 1);
+                let h = rand::thread_rng().gen_range(0, MAX_BOARD_HEIGHT - 1);
 
                 // Start over if that space is already taken.
                 if self.self_spaces[h as usize][w as usize] != '-' {
@@ -42,17 +46,15 @@ impl Board {
                 }
 
                 // true = up/down, false = left/right
-                let orientation: bool = rand::thread_rng().gen();
+                orientation = rand::thread_rng().gen();
 
                 // Set the upper or most right bound for bounds checking.
-                let bound: i8;
-                let start_point: i8;
                 if orientation {
-                    bound = max_height;
-                    start_point = h;
+                    bound = MAX_BOARD_HEIGHT as i8;
+                    start_point = h as i8;
                 } else {
-                    bound = max_width;
-                    start_point = w;
+                    bound = MAX_BOARD_WIDTH as i8;
+                    start_point = w as i8;
                 }
 
                 // Make sure the end of the Ship is within the bounds of the board.
@@ -103,7 +105,7 @@ impl Board {
         self.self_spaces[row as usize][col as usize] != '-'
     }
 
-    fn destroyed_enemy(&self) -> bool {
+    fn has_destroyed_enemy(&self) -> bool {
         // Check to see if all number of hits == max number of hits possible.
         let mut hits = 0;
         for i in &self.enemy_spaces {
@@ -142,8 +144,8 @@ impl Board {
 
         // Print column labels (1-10).
         print!("   ");
-        for j in 1..11 {
-            print!(" {0} ", j);
+        for j in 0..MAX_BOARD_WIDTH {
+            print!(" {0} ", j + 1);
         }
         println!();
     }
@@ -165,8 +167,8 @@ fn ship_factory(name: String, len: i8) -> Ship {
 fn board_factory(name: String) -> Board {
     return Board {
         name: name.to_string(),
-        self_spaces: [['-'; 10]; 9],
-        enemy_spaces: [['-'; 10]; 9],
+        self_spaces: [['-'; MAX_BOARD_WIDTH]; MAX_BOARD_HEIGHT],
+        enemy_spaces: [['-'; MAX_BOARD_WIDTH]; MAX_BOARD_HEIGHT],
         ships: [
             ship_factory("aircraft".to_string(), 5),
             ship_factory("battleship".to_string(), 4),
@@ -227,7 +229,7 @@ fn main() {
                 col = coordinate[1..coordinate.len()].parse().unwrap_or(0) - 1;
 
                 // Bounds checking.
-                if row < 0 || row >= 9 || col < 0 || col >= 10 {
+                if row < 0 || row >= MAX_BOARD_HEIGHT as i8 || col < 0 || col >= MAX_BOARD_WIDTH as i8 {
                     // The coodinate the user chose is out of bounds.
                     println!("Bad input!");
                     continue
@@ -266,7 +268,7 @@ fn main() {
         }
 
         // Check if someone won.
-        if active_board.destroyed_enemy() {
+        if active_board.has_destroyed_enemy() {
             println!("{0} won!", active_board.name);
             break
         }
