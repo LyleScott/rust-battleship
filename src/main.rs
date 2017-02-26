@@ -98,7 +98,7 @@ fn main() {
                 active_board.enemy_spaces[row as usize][col as usize] = board::MISS_ICON;
                 enemy_board.self_spaces[row as usize][col as usize] = board::MISS_ICON;
             }
-            thread::sleep(time::Duration::from_millis(1000));
+            thread::sleep(time::Duration::from_millis(800));
 
             break
         }
