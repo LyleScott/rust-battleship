@@ -232,11 +232,12 @@ fn main() {
                 // Deduce the row index from the char value of the letter input.
                 row = coordinate.to_uppercase().chars().nth(0).unwrap() as i8 - offset_a;
 
-                // Grab the rest of the input string, which should be the number of the coordinate.
+                // Grab the rest of the input string; ie, the number of the coordinate.
                 col = coordinate[1..coordinate.len()].parse().unwrap_or(0) - 1;
 
                 // Bounds checking.
-                if row < 0 || row >= MAX_BOARD_HEIGHT as i8 || col < 0 || col >= MAX_BOARD_WIDTH as i8 {
+                if row < 0 || row >= MAX_BOARD_HEIGHT as i8
+                    || col < 0 || col >= MAX_BOARD_WIDTH as i8 {
                     // The coodinate the user chose is out of bounds.
                     println!("Bad input!");
                     continue
