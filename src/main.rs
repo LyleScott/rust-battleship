@@ -33,12 +33,13 @@ impl Board {
         let mut orientation: bool;
         let mut bound: i8;
         let mut start_point: i8;
+        let mut rng = rand::thread_rng();
 
         for ship in self.ships.iter_mut() {
             loop {
                 // Pick a (random) starting point.
-                let w = rand::thread_rng().gen_range(0, MAX_BOARD_WIDTH - 1);
-                let h = rand::thread_rng().gen_range(0, MAX_BOARD_HEIGHT - 1);
+                let w = rng.gen_range(0, MAX_BOARD_WIDTH - 1);
+                let h = rng.gen_range(0, MAX_BOARD_HEIGHT - 1);
 
                 // Start over if that space is already taken.
                 if self.self_spaces[h as usize][w as usize] != DEFAULT_ICON {
@@ -46,7 +47,7 @@ impl Board {
                 }
 
                 // true = up/down, false = left/right
-                orientation = rand::thread_rng().gen();
+                orientation = rng.gen();
 
                 // Set the upper or most right bound for bounds checking.
                 if orientation {
@@ -200,6 +201,7 @@ fn main() {
     let mut row: i8;
     let mut col: i8;
     let mut coordinate: String;
+    let mut rng = rand::thread_rng();
 
     loop {
         loop {
@@ -240,8 +242,8 @@ fn main() {
             } else {
                 // Basically, guess a coordinate.
                 loop {
-                    row = rand::thread_rng().gen_range(b'A', b'I') as i8 - offset_a;
-                    col = rand::thread_rng().gen_range(0, 9) as i8;
+                    row = rng.gen_range(b'A', b'I') as i8 - offset_a;
+                    col = rng.gen_range(0, 9) as i8;
                     if active_board.enemy_spaces[row as usize][col as usize] == DEFAULT_ICON {
                         // Let the computer have the advantage of not duping a coordinate.
                         break
