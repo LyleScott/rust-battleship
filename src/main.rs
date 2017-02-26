@@ -2,15 +2,19 @@ extern crate rand;
 #[macro_use] extern crate text_io;
 
 use rand::Rng;
-use std::thread::sleep;
+use std::{thread, time};
+
+const MISS_ICON: char = '🔹';
+const HIT_ICON: char = '💥';
+static WE_HIT_MESSAGE: &'static str = ":> We HIT them, Captain!";
+static WE_MISS_MESSAGE: &'static str = ":> We MISSED them, Captain!";
+static THEY_HIT_MESSAGE: &'static str = ":> They HIT us, Captain!";
+static THEY_MISS_MESSAGE: &'static str = ":> They MISSED us, Captain!";
 
 struct Ship {
     name: String,
     len: i8,
 }
-
-const MISS_ICON: char = '🔹';
-const HIT_ICON: char = '💥';
 
 struct Board {
     name: String,
@@ -174,29 +178,29 @@ fn board_factory(name: String) -> Board {
 }
 
 fn main() {
+    // Create Boards containing Ships for each player.
     let mut computer_board = board_factory("Computer".to_string());
-    let mut human_board = board_factory("Human".to_string());
-
     computer_board.initialize();
+    let mut human_board = board_factory("Human".to_string());
     human_board.initialize();
 
+    // Needed for transforming a char of A-I to zero-based indexing into an array.
     let offset_a = 'A' as i8;
 
     // Hold references to each board. Then swap them after each turn.
     let active_board = &mut human_board;
     let enemy_board = &mut computer_board;
 
+    // Alter the hit/miss messages based on who's turn it is.
+    let mut hit_message: &'static str;
+    let mut miss_message: &'static str;
+
+    let mut row: i8;
+    let mut col: i8;
+    let mut coordinate: String;
+
     loop {
-
-        if active_board.destroyed_enemy() {
-            println!("{0} won!", active_board.name);
-            break
-        }
-
         loop {
-            let mut row: i8;
-            let mut col: i8;
-
             if active_board.is_human() {
                 // Print the boards.
                 println!("\n>> Our Fleet Status");
@@ -206,12 +210,11 @@ fn main() {
 
                 // Get the coordinate from the user's keyboard.
                 println!("\n?> Coordinate, sir? (ie, C5)");
-                let coordinate: String = read!("{}\n");
+                coordinate = read!("{}\n");
 
                 // The offset the length of the "number" part of the coordinate.
                 // ie, It can be "1" in the case of B1, but also "2" in the case of B10.
-                let offset = coordinate.len();
-                if offset < 1 {
+                if coordinate.len() < 1 {
                     // The user entered no characters or a single character.
                     println!("Bad input!");
                     continue
@@ -221,7 +224,7 @@ fn main() {
                 row = coordinate.to_uppercase().chars().nth(0).unwrap() as i8 - offset_a;
 
                 // Grab the rest of the input string, which should be the number of the coordinate.
-                col = coordinate[1..offset].parse().unwrap_or(0) - 1;
+                col = coordinate[1..coordinate.len()].parse().unwrap_or(0) - 1;
 
                 // Bounds checking.
                 if row < 0 || row >= 9 || col < 0 || col >= 10 {
@@ -230,12 +233,8 @@ fn main() {
                     continue
                 }
 
-                if enemy_board.is_hit(row, col) {
-                    println!(":> We HIT them, Captain!");
-                } else {
-                    println!(":> We MISSED them, Captain!");
-                }
-                //sleep(1100);
+                hit_message = &WE_HIT_MESSAGE;
+                miss_message = &WE_MISS_MESSAGE;
             } else {
                 // Basically, guess a coordinate.
                 loop {
@@ -247,26 +246,28 @@ fn main() {
                     }
                 }
 
-                if enemy_board.is_hit(row, col) {
-                    println!(":> They HIT us, Captain!");
-                } else {
-                    println!(":> They MISSED us, Captain!");
-                }
+                hit_message = &THEY_HIT_MESSAGE;
+                miss_message = &THEY_MISS_MESSAGE;
             }
 
-            // Update what is displayed in that space.
-            active_board.enemy_spaces[row as usize][col as usize] = if enemy_board.is_hit(row, col) {
-                HIT_ICON
+            // Display a HIT or MISS message.
+            if enemy_board.is_hit(row, col) {
+                println!("{0}", hit_message);
+                active_board.enemy_spaces[row as usize][col as usize] = HIT_ICON;
+                enemy_board.self_spaces[row as usize][col as usize] = HIT_ICON;
             } else {
-                MISS_ICON
-            };
+                println!("{0}", miss_message);
+                active_board.enemy_spaces[row as usize][col as usize] = MISS_ICON;
+                enemy_board.self_spaces[row as usize][col as usize] = MISS_ICON;
+            }
+            thread::sleep(time::Duration::from_millis(1000));
 
-            enemy_board.self_spaces[row as usize][col as usize] = if enemy_board.is_hit(row, col) {
-                HIT_ICON
-            } else {
-                MISS_ICON
-            };
+            break
+        }
 
+        // Check if someone won.
+        if active_board.destroyed_enemy() {
+            println!("{0} won!", active_board.name);
             break
         }
 
