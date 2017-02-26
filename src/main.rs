@@ -16,7 +16,13 @@ static THEY_MISS_MESSAGE: &'static str = ":> They MISSED us, Captain!";
 
 struct Ship {
     name: String,
-    len: i8,
+    n_spaces: i8,
+}
+
+impl Ship {
+    fn get_label(&self) -> char {
+        self.name.chars().nth(0).unwrap()
+    }
 }
 
 struct Board {
@@ -59,7 +65,7 @@ impl Board {
                 }
 
                 // Make sure the end of the Ship is within the bounds of the board.
-                if start_point + ship.len >= bound {
+                if start_point + ship.n_spaces >= bound {
                     continue
                 }
 
@@ -67,7 +73,7 @@ impl Board {
                 //let mut value: char;
 
                 // Make sure any space that the Ship takes up is not taken.
-                for i in start_point..ship.len + start_point {
+                for i in start_point..ship.n_spaces + start_point {
                     let value = if orientation {
                         self.self_spaces[i as usize][start_point as usize]
                     } else {
@@ -86,12 +92,11 @@ impl Board {
                 }
 
                 // Update the board self_spaces with the Ship's label (1st character of name).
-                let label = ship.name.chars().nth(0).unwrap();
-                for i in start_point..ship.len + start_point {
+                for i in start_point..ship.n_spaces + start_point {
                     if orientation {
-                        self.self_spaces[i as usize][start_point as usize] = label;
+                        self.self_spaces[i as usize][start_point as usize] = ship.get_label();
                     } else {
-                        self.self_spaces[start_point as usize][i as usize] = label;
+                        self.self_spaces[start_point as usize][i as usize] = ship.get_label();
                     }
                 }
 
@@ -158,10 +163,10 @@ impl PartialEq for Board {
     }
 }
 
-fn ship_factory(name: String, len: i8) -> Ship {
+fn ship_factory(name: String, n_spaces: i8) -> Ship {
     return Ship {
         name: name,
-        len: len,
+        n_spaces: n_spaces,
     }
 }
 
