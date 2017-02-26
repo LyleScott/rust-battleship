@@ -35,6 +35,6 @@ Ships:
 ## Game Play
 
 - When you start a game, the Ships are randomly placed on your board (and the computer's board).
-- You get prompted for coordinated for your next torpedo.
+- You get prompted for coordinates for your next torpedo.
 - As you build up hits/misses, you start to hone in on the enemy ships.
 - Sink all the ships to win the game.
