@@ -17,6 +17,7 @@ static THEY_MISS_MESSAGE: &'static str = ":> They MISSED us, Captain!";
 struct Ship {
     name: String,
     n_spaces: i8,
+    remaining_hits: i8,
 }
 
 impl Ship {
@@ -69,10 +70,8 @@ impl Board {
                     continue
                 }
 
-                skip = false;
-                //let mut value: char;
-
                 // Make sure any space that the Ship takes up is not taken.
+                skip = false;
                 for i in start_point..ship.n_spaces + start_point {
                     let value = if orientation {
                         self.self_spaces[i as usize][start_point as usize]
@@ -86,10 +85,7 @@ impl Board {
                         break
                     }
                 }
-                if skip {
-                    // Space is taken, so restart placing the Ship.
-                    continue
-                }
+                if skip { continue } // Space is taken, so replace Ship.
 
                 // Update the board self_spaces with the Ship's label (1st character of name).
                 for i in start_point..ship.n_spaces + start_point {
@@ -130,13 +126,8 @@ impl Board {
     }
 
     fn print_board(&self, is_self: bool) {
-        // A
-        let mut i = 65u8;
-        let spaces_ref = if is_self {
-            self.self_spaces
-        } else {
-            self.enemy_spaces
-        };
+        let mut i = 65u8;  // A
+        let spaces_ref = if is_self { self.self_spaces } else { self.enemy_spaces };
 
         // Prefix each row with the label (A-I) and print the row contents.
         for row in &spaces_ref {
